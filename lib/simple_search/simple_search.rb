@@ -2,44 +2,45 @@ require 'active_model'
 
 module SimpleSearch
   class Search
-    include SimpleSearch::CompoundMethods
     include ActiveModel::Conversion
     extend ActiveModel::Naming
 
     attr_reader :filters, :model
 
     def initialize(params)
-      @model = params['controller'].classify.constantize
-      @filters = FilterBuilder::from_controller_params(model, params)
-      # @filters = Filter::from_controller_params(params)
+      @model = FilterBuilder::model_from_controller_params(params)
+      @filters = FilterBuilder::filters_from_controller_params(params)
     end
 
     def result
       return model.all if filters.empty?
-      search
+      apply_filters
     end
 
     private
 
-    def method_missing(meth, *args, &block)
-      if model.searchables.include? extract_attribute(meth).to_sym
-        filters.select { |f| f[:compound] == meth.to_s }.first[:value]
+    def apply_filters(searched = model.all, conditions = filters.dup)
+      filter = conditions.pop
+      searched = search(searched, filter)
+
+      return searched if conditions.empty?
+      apply_filters(searched, conditions)
+    end
+
+    def search(searched, filter)
+      if filter.custom_method?
+        searched.send(filter.method, filter.value)
       else
-        super
+        FilterMethods.send(filter.method, searched, { filter.attribute => filter.value })
       end
     end
 
-    def search(searched = model.all, conditions = filters.dup)
-      filter = conditions.pop
-
-      if filter[:attribute] == 'custom_scope'
-        searched = searched.send(filter[:method], filter[:value])
+    def method_missing(meth, *args, &block)
+      if filters.any? { |f| f.compound == meth.to_s }
+        filters.find { |f| f.compound == meth.to_s }.value
       else
-        searched = FilterMethods.send(filter[:method], searched, { filter[:attribute] => filter[:value] })
+        super
       end
-
-      return searched if conditions.empty?
-      search(searched, conditions)
     end
 
   end

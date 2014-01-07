@@ -5,6 +5,7 @@ ActiveRecord::Schema.define do
     t.string :first_name
     t.string :last_name
     t.string :mood
+    t.integer :age
     t.timestamps
   end
 end

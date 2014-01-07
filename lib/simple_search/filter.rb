@@ -3,7 +3,7 @@ module SimpleSearch
 
     attr_reader :compound, :attribute, :method, :value, :model
 
-    def initialize(*attrs)
+    def initialize(attrs)
       @attribute = attrs[:attribute]
       @compound = attrs[:compound]
       @method = attrs[:method]
@@ -11,13 +11,12 @@ module SimpleSearch
       @model = attrs[:model]
     end
 
-    def custom_mthod?
+    def custom_method?
+      attribute == 'custom_scope'
     end
 
     def filter?
-    end
-
-    def value_from_compound(compound)
+      !custom_method?
     end
 
   end

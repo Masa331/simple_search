@@ -19,17 +19,17 @@ describe SimpleSearch do
     it 'returns filtered records for given search parameters' do
       params = { "controller"=>"user",
                  "action"=>"index",
-                 "filters"=>{ 'first_name_eq' => 'Peter',
-                              'last_name_eq' => 'Hornicek' }}
+                 "filters"=>{ 'first_name_eq' => 'Thomas',
+                              'age_eq' => 29 }}
 
-      fred = User.create(first_name: 'Fred', last_name: 'Novak')
-      peter = User.create(first_name: 'Peter', last_name: 'Novotny')
-      peter_hornicek = User.create(first_name: 'Peter', last_name: 'Hornicek')
+      fred = User.create(first_name: 'Fred', age: 29)
+      thomas = User.create(first_name: 'Thomas', age: 20)
+      searched_thomas = User.create(first_name: 'Thomas', age: 29)
 
       search = SimpleSearch::Search.new(params)
-      expect(search.result).to eq [peter_hornicek]
+      expect(search.result).to eq [searched_thomas]
       expect(search.result).not_to include fred
-      expect(search.result).not_to include peter
+      expect(search.result).not_to include thomas
     end
 
     it 'returns filtered records using custom model filter methods' do
@@ -64,11 +64,19 @@ describe SimpleSearch do
     it 'search with first_name_eq is accessible' do
       params = { "controller"=>"user",
                  "action"=>"index",
-                 "filters"=> { 'first_name_eq' => 'Fred',
-                               'last_name_eq' => 'Novak' }}
+                 "filters"=> { 'first_name_eq' => 'Fred' }}
 
       search = SimpleSearch::Search.new(params)
       expect(search.first_name_eq).to eq 'Fred'
+    end
+
+    it 'search with first_name_eq is accessible' do
+      params = { "controller"=>"user",
+                 "action"=>"index",
+                 "filters"=> { 'name_search' => 'Peter' }}
+
+      search = SimpleSearch::Search.new(params)
+      expect(search.name_search).to eq 'Peter'
     end
   end
 
